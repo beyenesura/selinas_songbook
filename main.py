@@ -4,6 +4,7 @@ import bcrypt
 
 app = Flask(__name__)
 
+#TODO Integrate JWT/Oauth
 
 def get_db_connection():
     
@@ -28,11 +29,41 @@ def verifyUser(user, password):
     
     if(len(passToCheck) == 0):
         return False
-    
+    #checks against hashed pw from db
     result = bcrypt.checkpw(passToCheck)
 
     return result
+'''
 
+LOGIN/REGISTER ROUTES
+
+'''
+@app.route("/login", methods=['POST'])
+def login():
+    data = request.json
+    if(verifyUser(data['user'], data['password']) == False):
+        return 'Incorrect user/pass '
+    else:
+        return 'Successfully logged in'
+
+@app.route("/register", methods=['POST'])
+def register():
+    data = request.json
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    possibleUsers = cur.execute('Select * from users where user=' + user + ';').fetchall()
+    
+    if(len(possibleUsers) == 0):
+        
+        user = data['user']
+        password = data['password']
+    
+        cur.execute("Insert into users (user, pass) VALUES("+ user + "," + password + ");")
+        
+        return 'Successfully created account'
+    else:
+        return 'Username taken'
 
 '''
 
