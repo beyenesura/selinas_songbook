@@ -1,15 +1,37 @@
 from flask import Flask,request,jsonify
 import sqlite3
+import bcrypt
 
 app = Flask(__name__)
 
 
 def get_db_connection():
+    
     conn = sqlite3.connect('database.db')
     return conn
 
+def verifyUser(user, password):
+    
+    #hash what the user gives you
+    passbytes = password.encode('utf-8')
 
+    salt = bcrypt.gensalt()
+    
+    hashedword = bcrypt.hashpw(passbytes, salt)
+    
+    #lookup user in db, compare hashed passwords
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    passToCheck = cur.execute('Select password from users where user =' + user + ';').fetchall()
 
+    
+    if(len(passToCheck) == 0):
+        return false
+    
+    result = bcrypt.checkpw(passToCheck)
+
+    return result
 
 
 '''
@@ -45,19 +67,12 @@ CREATE ROUTES
 '''
 
 
-@app.route('/add_song',methods=['POST'])
+@app.route('/add_song', methods=['POST'])
 def add_song():
 
     #data is a dict of key_value pairs
     data = request.json
     
-
-
-    
-
-   
-
-
     try:
 
         #check that it has all of the requirements. a title,author, and lyrics
@@ -87,13 +102,6 @@ def add_song():
 
     except Exception as e:
         return str(e.args)
-
-
-
-
-
-
-
 
 
 '''
@@ -183,3 +191,4 @@ def delete_song():
 
     except Exception as e:
         return str(e.args)
+
