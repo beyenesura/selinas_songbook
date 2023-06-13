@@ -27,7 +27,7 @@ def verifyUser(user, password):
 
     
     if(len(passToCheck) == 0):
-        return false
+        return False
     
     result = bcrypt.checkpw(passToCheck)
 
@@ -69,10 +69,14 @@ CREATE ROUTES
 
 @app.route('/add_song', methods=['POST'])
 def add_song():
-
+    
+    
     #data is a dict of key_value pairs
     data = request.json
     
+    if(verifyUser(data['user'], data['password']) == False):
+        return 'Incorrect user/pass '
+        
     try:
 
         #check that it has all of the requirements. a title,author, and lyrics
@@ -110,6 +114,10 @@ UPDATE ROUTE
 
 @app.route('/edit_song',methods=['POST'])
 def edit_song():
+    
+    if(verifyUser(data['user'], data['password']) == False):
+        return 'Incorrect user/pass '
+
 
     #data is a dict of key_value pairs
     data = request.json
@@ -157,6 +165,9 @@ DELETE ROUTE
 
 @app.route('/delete_song',methods=['DELETE'])
 def delete_song():
+
+    if(verifyUser(data['user'], data['password']) == False):
+        return 'Incorrect user/pass '
 
     #data is a dict of key_value pairs
     data = request.json
