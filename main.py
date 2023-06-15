@@ -1,8 +1,10 @@
 from flask import Flask,request,jsonify
 import sqlite3
 import bcrypt
+import jwt
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY4Njc5MTc1NiwiaWF0IjoxNjg2NzkxNzU2fQ.mnh2azjgyGM4JByhfSPxAcTHjEL8kuZv-6V-y5V3AaQ'
 
 #TODO Integrate JWT/Oauth
 
@@ -33,6 +35,34 @@ def verifyUser(user, password):
     result = bcrypt.checkpw(passToCheck)
 
     return result
+
+# decorator for verifying the JWT
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        # jwt is passed in the request header
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+        # return 401 if token is not passed
+        if not token:
+            return jsonify({'message' : 'Token is missing !!'}), 401
+
+        try:
+            # decoding the payload to fetch the stored details
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            current_user = User.query\
+                .filter_by(public_id = data['public_id'])\
+                .first()
+        except:
+            return jsonify({
+                'message' : 'Token is invalid !!'
+            }), 401
+        # returns the current logged in users context to the routes
+        return  f(current_user, *args, **kwargs)
+
+    return decorated
+
 '''
 
 LOGIN/REGISTER ROUTES
@@ -44,6 +74,9 @@ def login():
     if(verifyUser(data['user'], data['password']) == False):
         return 'Incorrect user/pass '
     else:
+        token = jwt.encode({
+            'user': data['user'] 
+        }, app.config['SECRET_KEY'])
         return 'Successfully logged in'
 
 @app.route("/register", methods=['POST'])
@@ -73,6 +106,7 @@ READ ROUTES
 
 #Get all Songs
 @app.route("/get_songs")
+@token_required
 def get_songs():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -82,6 +116,7 @@ def get_songs():
 
 #Get song by name
 @app.route("/get_song/<string:name>")
+@token_required
 def get_song(name=None):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -99,15 +134,13 @@ CREATE ROUTES
 
 
 @app.route('/add_song', methods=['POST'])
+@token_required
 def add_song():
     
     
     #data is a dict of key_value pairs
     data = request.json
-    
-    if(verifyUser(data['user'], data['password']) == False):
-        return 'Incorrect user/pass '
-        
+            
     try:
 
         #check that it has all of the requirements. a title,author, and lyrics
@@ -144,11 +177,10 @@ UPDATE ROUTE
 '''
 
 @app.route('/edit_song',methods=['POST'])
+@token_required
 def edit_song():
     
-    if(verifyUser(data['user'], data['password']) == False):
-        return 'Incorrect user/pass '
-
+    
 
     #data is a dict of key_value pairs
     data = request.json
@@ -195,11 +227,9 @@ DELETE ROUTE
 '''
 
 @app.route('/delete_song',methods=['DELETE'])
+@token_required
 def delete_song():
-
-    if(verifyUser(data['user'], data['password']) == False):
-        return 'Incorrect user/pass '
-
+ 
     #data is a dict of key_value pairs
     data = request.json
     
