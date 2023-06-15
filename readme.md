@@ -1,1 +1,1 @@
-to be added
+The purpose of this project is to create a secured RESTful API which allows the admin (famed songwriter: Selina) who has special super-user account type to read, create, update, and delete all entries, regardless of user/owner; as in contrast authorized basic Users (band members, legal team, etc) can only access thier own entries (not entries of other users). All while keeping the entries safe from rivals and unauthorized musicians by hashing and salting passwords before saving to the database.
