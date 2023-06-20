@@ -9,4 +9,4 @@ CREATE TABLE songs (
 );
 
 
-
+--- CREATE TABLE USERS
