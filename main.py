@@ -41,6 +41,9 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
+        conn = get_db_connection()
+        cur = conn.cursor()
+
         # jwt is passed in the request header
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
@@ -51,9 +54,7 @@ def token_required(f):
         try:
             # decoding the payload to fetch the stored details
             data = jwt.decode(token, app.config['SECRET_KEY'])
-            current_user = User.query\
-                .filter_by(public_id = data['public_id'])\
-                .first()
+            current_user = cur.execute('SELECT * FROM USERS where user= ' + data['user'] + ';').fetchall()
         except:
             return jsonify({
                 'message' : 'Token is invalid !!'
