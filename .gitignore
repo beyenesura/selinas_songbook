@@ -5,3 +5,4 @@ venv/
 .DS_STORE
 *.db
 .node_modules
+front_end/node_modules
