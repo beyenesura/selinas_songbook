@@ -147,15 +147,15 @@ def get_songs(user):
 
 
 #Get song by name
-@app.route("/get_song/<string:name>")
+@app.route("/get_song")
 @cross_origin()
 @token_required
-def get_song(user,name=None):
+def get_song(user):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM songs WHERE title = ?',[name])
-    data = cur.fetchall()
-    return data
+    content = request.args.get('song')
+    data = cur.execute('SELECT * FROM songs WHERE title = ?',(content,)).fetchone()
+    return jsonify({"response":data})
 
 
 
@@ -169,24 +169,24 @@ CREATE ROUTES
 @app.route('/add_song', methods=['POST'])
 @cross_origin()
 @token_required
-def add_song():
+def add_song(name):
     
     
     #data is a dict of key_value pairs
-    data = request.json
+    content = request.get_json()
             
     try:
 
         #check that it has all of the requirements. a title,author, and lyrics
-        title = data['title']
-        author = data['author']
-        lyrics = data['lyrics']
+        title = content['title']
+        author = content['author']
+        lyrics = content['lyrics']
 
 
         #check that name of song does not exist already
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
 
         if data!=[]:
@@ -198,12 +198,12 @@ def add_song():
         #add the song
         cur.execute("INSERT INTO songs (title, author,lyrics) VALUES (?,?,?)",(title,author,lyrics))
         conn.commit()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
-        return data
+        return jsonify({"response":data,"success":True})
 
     except Exception as e:
-        return str(e.args)
+        return jsonify({"response":str(e),"success":False})
 
 
 '''
