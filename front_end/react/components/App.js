@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong} from './api_calls';
+import { handleEditSong,handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong,handleDeleteSong} from './api_calls';
 import { SongList } from './SongList';
 export const App = () => {
   // State holds the current file that is to be uploaded to the server
@@ -101,8 +101,8 @@ export const App = () => {
           <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
           <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
           <button onClick={(e)=>setPage('add_song')}>Add A song</button>
-          <button>Edit A Song</button>
-          <button>Delete A Song</button>
+          <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+          <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
         </div>
 
       )
@@ -149,9 +149,9 @@ export const App = () => {
       <h3>Error on finding Song</h3>
       <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
       <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
-      <button>Add A song</button>
-      <button>Edit A Song</button>
-      <button>Delete A Song</button>
+      <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+      <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+      <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
     </div>
     )
   
@@ -198,8 +198,8 @@ export const App = () => {
         <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
         <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
-        <button>Edit A Song</button>
-        <button>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
       </div>
       )
 
@@ -213,10 +213,104 @@ export const App = () => {
         <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
         <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
-        <button>Edit A Song</button>
-        <button>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
       </div>
       )
 
   }
+
+  else if(page==='edit_song'){
+
+      return (
+        <div>
+        
+        <form onSubmit={(e) => handleEditSong(e,setPage,title,author,lyrics,someToken)}>
+          <input type="text" onChange={(e) => setTitle(e.target.value)} placeholder='song title'/>
+          <input type="text" onChange={(e) => setAuthor(e.target.value)} placeholder='author name'/>
+          <input type="text" onChange={(e) => setLyrics(e.target.value)} placeholder='lyrics'/>
+          <input type='submit' value='Edit Song'></input>
+        </form>
+
+
+        </div>
+
+    )
+  }
+
+  else if(page==='edit_song_failed'){
+    return(
+      <div className="top_level_container">
+        <h3>Error on Editing Song</h3>
+        <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+        <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
+        <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+      </div>
+      )
+
+  }
+
+
+  else if(page==='edit_song_success'){
+    return(
+      <div className="top_level_container">
+        <h3>Song Edited Successfully</h3>
+        <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+        <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
+        <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+      </div>
+      )
+  }
+
+
+  else if(page==='delete_song'){
+    return (
+      <div>
+      
+      <form onSubmit={(e) => handleDeleteSong(e,setPage,title,someToken)}>
+        <input type="text" onChange={(e) => setTitle(e.target.value)} placeholder='song title'/>
+        <input type='submit' value='Delete Song'></input>
+      </form>
+
+
+      </div>
+
+  )
+  }
+
+
+  else if(page==='delete_song_failed'){
+
+    return(
+      <div className="top_level_container">
+        <h3>Error on Deleting Song</h3>
+        <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+        <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
+        <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+      </div>
+      )
+
+  }
+
+  else if(page==='delete_song_success'){
+
+    return(
+      <div className="top_level_container">
+        <h3>Successfully Deleted Song</h3>
+        <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+        <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
+        <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+      </div>
+      )
+
+  }
+  
 }

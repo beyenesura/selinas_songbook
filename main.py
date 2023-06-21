@@ -213,47 +213,43 @@ UPDATE ROUTE
 @app.route('/edit_song',methods=['POST'])
 @cross_origin()
 @token_required
-def edit_song():
+def edit_song(name):
     
     
 
-    #data is a dict of key_value pairs
-    data = request.json
-    
-
-
+     #data is a dict of key_value pairs
+    content = request.get_json()
+            
     try:
 
         #check that it has all of the requirements. a title,author, and lyrics
-        title = data['title']
-        new_title = data['new_title']
-        author = data['author']
-        lyrics = data['lyrics']
+        title = content['title']
+        author = content['author']
+        lyrics = content['lyrics']
 
 
-
-        #check that name of song exists
+        #check that name of song does not exist already
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
 
         if data==[]:
-            raise Exception('There is no song like this')
+            raise Exception('This song does not exist')
 
         
 
 
         #add the song
-        cur.execute("UPDATE songs SET title=?,author=?,lyrics=? WHERE title=?",(new_title,author,lyrics,title))
+        cur.execute("update songs set author=?,lyrics=? where title=?",(author,lyrics,title))
         conn.commit()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[new_title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
-        return data
-
+        return jsonify({"response":data,"success":True})
 
     except Exception as e:
-        return str(e.args)
+        return jsonify({"response":str(e),"success":False})
+
 
 
 
@@ -264,39 +260,35 @@ DELETE ROUTE
 @app.route('/delete_song',methods=['DELETE'])
 @cross_origin()
 @token_required
-def delete_song():
- 
+def delete_song(name):
+
     #data is a dict of key_value pairs
-    data = request.json
-    
-
-
+    content = request.get_json()
+            
     try:
 
         #check that it has all of the requirements. a title,author, and lyrics
-        title = data['title']
+        title = content['title']
 
 
-
-        #check that name of song exists
+        #check that name of song does not exist already
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
 
         if data==[]:
-            raise Exception('There is no song like this')
+            raise Exception('This song does not exist')
 
         
 
-        #add the song
-        cur.execute("DELETE FROM songs WHERE title=?",(title,))
-        conn.commit()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
-        data = cur.fetchall()
-        return data
 
+        #add the song
+        cur.execute("delete from songs where title=?",(title,))
+        conn.commit()
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+        data = cur.fetchall()
+        return jsonify({"response":data,"success":True})
 
     except Exception as e:
-        return str(e.args)
-
+        return jsonify({"response":str(e),"success":False})

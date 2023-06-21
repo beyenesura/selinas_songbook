@@ -143,6 +143,72 @@ const handleAddSong = (e,setPG,title,author,lyrics,token) =>{
     
 }
 
+const handleEditSong = (e,setPG,title,author,lyrics,token) =>{
+    e.preventDefault()
+    console.log(JSON.stringify({title:title,author:author,lyrics:lyrics}))
+    fetch('http://127.0.0.1:5000/edit_song',{
+        method:'POST',
+        headers: {
+            'Content-type':'application/json', 
+            'Accept':'application/json',
+            'x-access-token':token
+        },
+        body:JSON.stringify({title:title,author:author,lyrics:lyrics})
+    })
+
+    .then((res)=>res.json())
+    .then((data)=>
+    {
+
+        console.log(data['success'])
+        if( !(data['success'])){
+            setPG('edit_song_failed')
+        }else{
+            setPG('edit_song_success')
+        }
 
 
-module.exports = {handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong}
+
+            console.log(data)
+    
+    })
+    .catch((err)=>console.error(err))
+    
+}
+
+
+const handleDeleteSong = (e,setPG,title,token) =>{
+    e.preventDefault()
+    console.log(JSON.stringify({title:title}))
+    fetch('http://127.0.0.1:5000/delete_song',{
+        method:'DELETE',
+        headers: {
+            'Content-type':'application/json', 
+            'Accept':'application/json',
+            'x-access-token':token
+        },
+        body:JSON.stringify({title:title})
+    })
+
+    .then((res)=>res.json())
+    .then((data)=>
+    {
+
+        console.log(data['success'])
+        if( !(data['success'])){
+            setPG('delete_song_failed')
+        }else{
+            setPG('delete_song_success')
+        }
+
+
+
+            console.log(data)
+    
+    })
+    .catch((err)=>console.error(err))
+    
+}
+
+
+module.exports = {handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong,handleEditSong,handleDeleteSong}
