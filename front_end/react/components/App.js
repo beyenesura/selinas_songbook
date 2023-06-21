@@ -9,6 +9,7 @@ export const App = () => {
   const [someToken,setSomeToken] = useState()
   const [ifToken,setIfToken] = useState(false)
   const [allSongs,setAllSongs]= useState()
+  const [someSong,setSomeSong] = useState()
 
 
 
@@ -91,7 +92,7 @@ export const App = () => {
       return (
         <div className="top_level_container">
           <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
-          <button>Get A Song </button>
+          <button onClick={(e)=>handleOneSong(e,setPage,someToken)}>Get A Song </button>
           <button>Add A song</button>
           <button>Edit A Song</button>
           <button>Delete A Song</button>
@@ -101,6 +102,7 @@ export const App = () => {
 
 
   }
+
 
   else if(page==='all_songs'){
 
@@ -112,4 +114,13 @@ export const App = () => {
     )
   }
 
+  else if(page==='some_song'){
+
+    return (
+        <div>
+          <SongList songlist={allSongs} setPG={setPage}/>
+        </div>
+
+    )
+  }
 }
