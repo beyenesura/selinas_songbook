@@ -1,0 +1,6 @@
+dist/
+__pycache__
+.parcel-cache
+venv/
+.DS_STORE
+*.db

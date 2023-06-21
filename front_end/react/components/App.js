@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { handleRegisterSubmit } from './api_calls';
-
+import { handleRegisterSubmit,handleLoginSubmit,handleAllSongs } from './api_calls';
+import { SongList } from './SongList';
 export const App = () => {
   // State holds the current file that is to be uploaded to the server
   const [page,setPage] = useState('homepage')
   const [username,setUsername] = useState()
   const [password,setPassword] = useState()
   const [someToken,setSomeToken] = useState()
+  const [ifToken,setIfToken] = useState(false)
+  const [allSongs,setAllSongs]= useState()
 
 
-  if (page==='homepage'){
+
+
+
+  if (page==='homepage' && !ifToken){
 
 
 
@@ -21,7 +26,15 @@ export const App = () => {
       </div>
     )
 
+  } else if(page==='homepage'){
 
+
+    return(
+      <div className="top_level_container">
+          <button onClick={(e)=>setPage('viewdata')}>ViewData</button>
+        </div>
+      )
+  
 
 
 
@@ -33,9 +46,20 @@ export const App = () => {
 
     return (
       <div className="top_level_container">
-        <button>Whoops</button>
+
+
+        <form onSubmit={(e) => handleLoginSubmit(e,username,password,setSomeToken,setIfToken)}>
+          <input type="text" onChange={(e) => setUsername(e.target.value)} placeholder='username'/>
+          <input type="text" onChange={(e) => setPassword(e.target.value)} placeholder='password'/>
+          <input type='submit' value='Login'></input>
+        </form>
+
         <button onClick={(e)=>setPage('homepage')}>Homepage</button>
       </div>
+
+
+
+
     )
 
 
@@ -49,7 +73,7 @@ export const App = () => {
       <div className="top_level_container">
 
 
-        <form onSubmit={(e) => handleRegisterSubmit(e,username,password)} encType='multipart/form-data'>
+        <form onSubmit={(e) => handleRegisterSubmit(e,username,password)}>
           <input type="text" onChange={(e) => setUsername(e.target.value)} placeholder='username'/>
           <input type="text" onChange={(e) => setPassword(e.target.value)} placeholder='password'/>
           <input type='submit' value='Register'></input>
@@ -62,7 +86,30 @@ export const App = () => {
 
 
     )
-  }else if(page==='requestData'){
-    
+  }else if(page==='viewdata'){
+      console.log(someToken)
+      return (
+        <div className="top_level_container">
+          <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+          <button>Get A Song </button>
+          <button>Add A song</button>
+          <button>Edit A Song</button>
+          <button>Delete A Song</button>
+        </div>
+
+      )
+
+
   }
+
+  else if(page==='all_songs'){
+
+    return (
+        <div>
+          <SongList songlist={allSongs} setPG={setPage}/>
+        </div>
+
+    )
+  }
+
 }

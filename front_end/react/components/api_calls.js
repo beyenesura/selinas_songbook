@@ -1,25 +1,83 @@
-const handleRegisterSubmit = (e,username,password) =>{
+const handleRegisterSubmit = (e,un,pw) =>{
     e.preventDefault()
 
 
-    const data = new FormData()
-    data.append("username",username)
-    data.append("password",password)
-
-
-    if(!data){
-        return
+    if(!un || !pw){
+        return 1
     }
 
-    fetch('http:/locahost:5000/register',{
+    console.log(JSON.stringify({username:un,password:pw}))
+    fetch('http://127.0.0.1:5000/register',{
         method:'POST',
-        body:data,
+        headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json'
+        },
+        body:JSON.stringify({username:un,password:pw})
     })
-    
+
     .then((res)=>res.json())
+    .then((data)=>{console.log(data['response'])})
     .catch((err)=>console.error(err))
+
 }
 
 
 
-module.exports = {handleRegisterSubmit}
+const handleLoginSubmit = (e,un,pw,setToken,setIf) =>{
+    e.preventDefault()
+
+
+    if(!un || !pw){
+        return 1
+    }
+
+    console.log(JSON.stringify({username:un,password:pw}))
+    fetch('http://127.0.0.1:5000/login',{
+        method:'POST',
+        headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json'
+        },
+        body:JSON.stringify({username:un,password:pw})
+    })
+
+    .then((res)=>res.json())
+    .then((data)=>
+    {
+
+        setToken(data['response'])
+        setIf(true)
+        console.log(data['response'])
+    })
+    .catch((err)=>console.error(err))
+    
+}
+
+
+
+
+
+const handleAllSongs = (e,setPG,setAS,token) =>{
+    e.preventDefault()
+
+    fetch('http://127.0.0.1:5000/get_songs',{
+        method:'GET',
+        headers: {
+            'x-access-token':token
+        },
+    })
+
+    .then((res)=>res.json())
+    .then((data)=>
+    {
+
+        setPG('all_songs')
+        setAS(data)
+    })
+    .catch((err)=>console.error(err))
+    
+}
+
+
+module.exports = {handleRegisterSubmit,handleLoginSubmit,handleAllSongs}
