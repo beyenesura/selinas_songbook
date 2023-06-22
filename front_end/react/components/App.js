@@ -112,7 +112,7 @@ export const App = () => {
 
 
   else if(page==='all_songs'){
-
+    console.log(allSongs)
     return (
         <div>
           <SongList songlist={allSongs} setPG={setPage}/>
@@ -121,6 +121,18 @@ export const App = () => {
     )
   }
 
+  else if(page==='all_songs_failed'){
+    return(
+      <div className="top_level_container">
+        <h3>Error on finding Songs</h3>
+        <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+        <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
+        <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+      </div>
+      )
+  }
   else if(page==='some_song'){
 
     return (

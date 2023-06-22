@@ -71,9 +71,15 @@ const handleAllSongs = (e,setPG,setAS,token) =>{
     .then((res)=>res.json())
     .then((data)=>
     {
+        console.log(data['response'])
+        if(data['response'].length===0){
+            setPG('all_songs_failed')
+        }else{
+            setAS(data['response'])
+            setPG('all_songs')
+            
+        }
 
-        setPG('all_songs')
-        setAS(data)
     })
     .catch((err)=>console.error(err))
     

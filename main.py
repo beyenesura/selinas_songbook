@@ -138,9 +138,16 @@ READ ROUTES
 def get_songs(user):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM songs')
-    rows = cur.fetchall()
-    return rows
+    a,b,c,d,e = user
+
+    if e==True:
+        cur.execute('SELECT * FROM songs')
+        rows = cur.fetchall()
+        return jsonify({"response":rows})
+    else:
+        cur.execute('SELECT * FROM songs where author=?',(c,))
+        rows = cur.fetchall()
+        return jsonify({"response":rows})
 
 
 
@@ -217,35 +224,66 @@ def edit_song(name):
     
     
 
-     #data is a dict of key_value pairs
-    content = request.get_json()
-            
+     
     try:
-
+        content = request.get_json()
+        a,b,c,d,e = name       
         #check that it has all of the requirements. a title,author, and lyrics
         title = content['title']
         author = content['author']
         lyrics = content['lyrics']
 
 
-        #check that name of song does not exist already
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
-        data = cur.fetchall()
 
-        if data==[]:
-            raise Exception('This song does not exist')
+        if e==True:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
+
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to edit this song')
 
         
 
 
-        #add the song
-        cur.execute("update songs set author=?,lyrics=? where title=?",(author,lyrics,title))
-        conn.commit()
-        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
-        data = cur.fetchall()
-        return jsonify({"response":data,"success":True})
+            #add the song
+            cur.execute("update songs set author=?,lyrics=? where title=?",(author,lyrics,title))
+            conn.commit()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
+            return jsonify({"response":data,"success":True})
+
+
+
+        else:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ? and author=?',(title,c))
+            data = cur.fetchall()
+
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to edit this song')
+
+        
+
+
+            #add the song
+            cur.execute("update songs set author=?,lyrics=? where title=?",(author,lyrics,title))
+            conn.commit()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
+            return jsonify({"response":data,"success":True})
+
+
+
+
+
+
+
+
 
     except Exception as e:
         return jsonify({"response":str(e),"success":False})
@@ -262,23 +300,32 @@ DELETE ROUTE
 @token_required
 def delete_song(name):
 
-    #data is a dict of key_value pairs
-    content = request.get_json()
-            
-    try:
 
+    try:
+         #data is a dict of key_value pairs
+        content = request.get_json()
+        a,b,c,d,e = name
         #check that it has all of the requirements. a title,author, and lyrics
         title = content['title']
 
+        if e==True:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
 
-        #check that name of song does not exist already
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
-        data = cur.fetchall()
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to delete this song')
+        else:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ? and author=?',(title,c))
+            data = cur.fetchall()
 
-        if data==[]:
-            raise Exception('This song does not exist')
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to delete this song')
 
         
 

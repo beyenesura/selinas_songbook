@@ -6,3 +6,4 @@ venv/
 *.db
 .node_modules
 front_end/node_modules
+database-users-1-password
