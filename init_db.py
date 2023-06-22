@@ -1,6 +1,9 @@
 import sqlite3
+import bcrypt
 
 connection = sqlite3.connect('database.db')
+
+
 
 with open('schema.sql') as f:
     connection.executescript(f.read())
@@ -26,5 +29,14 @@ while(i<10):
    
     i+=1
 
+
+
+#hash what the user gives you
+password = 'coolkids'
+passbytes = password.encode('utf-8')
+hashedword = bcrypt.hashpw(passbytes,bcrypt.gensalt())
+    
+
+cur.execute("INSERT INTO users (username,password,superUser) values (?,?,?)",('axolu',hashedword,True))
 connection.commit()
 connection.close()

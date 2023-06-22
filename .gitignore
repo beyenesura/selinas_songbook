@@ -1,0 +1,9 @@
+dist/
+__pycache__
+.parcel-cache
+venv/
+.DS_STORE
+*.db
+.node_modules
+front_end/node_modules
+database-users-1-password

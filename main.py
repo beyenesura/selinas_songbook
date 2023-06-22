@@ -1,9 +1,29 @@
 from flask import Flask,request,jsonify
+from flask_cors import CORS, cross_origin
 import sqlite3
 import bcrypt
 import jwt
+from functools import wraps
+
+
+
+
+from flask import Flask
+
+
+
+
+
+
+
+
+
+
 
 app = Flask(__name__)
+
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['SECRET_KEY'] = 'eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY4Njc5MTc1NiwiaWF0IjoxNjg2NzkxNzU2fQ.mnh2azjgyGM4JByhfSPxAcTHjEL8kuZv-6V-y5V3AaQ'
 
 #TODO Integrate JWT/Oauth
@@ -14,25 +34,19 @@ def get_db_connection():
     return conn
 
 def verifyUser(user, password):
-    
-    #hash what the user gives you
-    passbytes = password.encode('utf-8')
 
-    salt = bcrypt.gensalt()
-    
-    hashedword = bcrypt.hashpw(passbytes, salt)
-    
-    #lookup user in db, compare hashed passwords
-    
     conn = get_db_connection()
     cur = conn.cursor()
-    passToCheck = cur.execute('Select password from users where user =' + user + ';').fetchall()
+    (passToCheck,) = cur.execute('Select password from users where username=?',(user,)).fetchone()
 
     
     if(len(passToCheck) == 0):
         return False
     #checks against hashed pw from db
-    result = bcrypt.checkpw(passToCheck)
+
+    checker = password.encode('utf-8')
+    
+    result = bcrypt.checkpw(checker,passToCheck)
 
     return result
 
@@ -40,26 +54,29 @@ def verifyUser(user, password):
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
+
+
         # jwt is passed in the request header
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
         # return 401 if token is not passed
         if not token:
             return jsonify({'message' : 'Token is missing !!'}), 401
-
         try:
             # decoding the payload to fetch the stored details
-            data = jwt.decode(token, app.config['SECRET_KEY'])
-            current_user = User.query\
-                .filter_by(public_id = data['public_id'])\
-                .first()
-        except:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            data = jwt.decode(token, app.config['SECRET_KEY'],algorithms=['HS256'])
+            current_user = cur.execute('SELECT * FROM USERS where username=?',(data['user'],)).fetchone()
+        except Exception as e:
             return jsonify({
-                'message' : 'Token is invalid !!'
+                'message' : 'Token is invalid !!',
+                'data':data,
+                'exception':e
             }), 401
         # returns the current logged in users context to the routes
-        return  f(current_user, *args, **kwargs)
+        return f(current_user, *args, **kwargs)
+
 
     return decorated
 
@@ -69,34 +86,44 @@ LOGIN/REGISTER ROUTES
 
 '''
 @app.route("/login", methods=['POST'])
+@cross_origin()
 def login():
-    data = request.json
-    if(verifyUser(data['user'], data['password']) == False):
+    
+    content = request.get_json(silent=True)
+    if(verifyUser(content['username'],content['password']) == False):
         return 'Incorrect user/pass '
     else:
-        token = jwt.encode({
-            'user': data['user'] 
-        }, app.config['SECRET_KEY'])
-        return 'Successfully logged in'
+        token = jwt.encode({'user': content['username']}, app.config['SECRET_KEY'],algorithm="HS256")
+        return {"response":token}
+
+
+
 
 @app.route("/register", methods=['POST'])
+@cross_origin()
 def register():
-    data = request.json
     
+    content = request.get_json(silent=True)
+    username=content['username']
     conn = get_db_connection()
     cur = conn.cursor()
-    possibleUsers = cur.execute('Select * from users where user=' + user + ';').fetchall()
-    
+    possibleUsers = cur.execute('Select * from users where username=?',(username,)).fetchall()
     if(len(possibleUsers) == 0):
         
-        user = data['user']
-        password = data['password']
-    
-        cur.execute("Insert into users (user, pass) VALUES("+ user + "," + password + ");")
         
-        return 'Successfully created account'
+
+        #hash what the user gives you
+        password = content['password']
+        passbytes = password.encode('utf-8')
+        hashedword = bcrypt.hashpw(passbytes,bcrypt.gensalt())
+    
+    
+        cur.execute("Insert into users (username, password) VALUES (?,?)",(username,hashedword))
+        conn.commit()
+
+        return {'response':'Successfully created account'}
     else:
-        return 'Username taken'
+        return {'response':'Username taken'}
 
 '''
 
@@ -106,23 +133,36 @@ READ ROUTES
 
 #Get all Songs
 @app.route("/get_songs")
+@cross_origin()
 @token_required
-def get_songs():
+def get_songs(user):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM songs')
-    rows = cur.fetchall()
-    return rows
+    a,b,c,d,e = user
+
+    if e==True:
+        cur.execute('SELECT * FROM songs')
+        rows = cur.fetchall()
+        return jsonify({"response":rows})
+    else:
+        cur.execute('SELECT * FROM songs where author=?',(c,))
+        rows = cur.fetchall()
+        return jsonify({"response":rows})
+
+
+
+
 
 #Get song by name
-@app.route("/get_song/<string:name>")
+@app.route("/get_song")
+@cross_origin()
 @token_required
-def get_song(name=None):
+def get_song(user):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM songs WHERE title = ?',[name])
-    data = cur.fetchall()
-    return data
+    content = request.args.get('song')
+    data = cur.execute('SELECT * FROM songs WHERE title = ?',(content,)).fetchone()
+    return jsonify({"response":data})
 
 
 
@@ -134,25 +174,26 @@ CREATE ROUTES
 
 
 @app.route('/add_song', methods=['POST'])
+@cross_origin()
 @token_required
-def add_song():
+def add_song(name):
     
     
     #data is a dict of key_value pairs
-    data = request.json
+    content = request.get_json()
             
     try:
 
         #check that it has all of the requirements. a title,author, and lyrics
-        title = data['title']
-        author = data['author']
-        lyrics = data['lyrics']
+        title = content['title']
+        author = content['author']
+        lyrics = content['lyrics']
 
 
         #check that name of song does not exist already
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
 
         if data!=[]:
@@ -164,12 +205,12 @@ def add_song():
         #add the song
         cur.execute("INSERT INTO songs (title, author,lyrics) VALUES (?,?,?)",(title,author,lyrics))
         conn.commit()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
-        return data
+        return jsonify({"response":data,"success":True})
 
     except Exception as e:
-        return str(e.args)
+        return jsonify({"response":str(e),"success":False})
 
 
 '''
@@ -177,48 +218,76 @@ UPDATE ROUTE
 '''
 
 @app.route('/edit_song',methods=['POST'])
+@cross_origin()
 @token_required
-def edit_song():
+def edit_song(name):
     
     
 
-    #data is a dict of key_value pairs
-    data = request.json
-    
-
-
+     
     try:
-
+        content = request.get_json()
+        a,b,c,d,e = name       
         #check that it has all of the requirements. a title,author, and lyrics
-        title = data['title']
-        new_title = data['new_title']
-        author = data['author']
-        lyrics = data['lyrics']
+        title = content['title']
+        author = content['author']
+        lyrics = content['lyrics']
 
 
 
-        #check that name of song exists
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
-        data = cur.fetchall()
+        if e==True:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
 
-        if data==[]:
-            raise Exception('There is no song like this')
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to edit this song')
 
         
 
 
-        #add the song
-        cur.execute("UPDATE songs SET title=?,author=?,lyrics=? WHERE title=?",(new_title,author,lyrics,title))
-        conn.commit()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[new_title])
-        data = cur.fetchall()
-        return data
+            #add the song
+            cur.execute("update songs set author=?,lyrics=? where title=?",(author,lyrics,title))
+            conn.commit()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
+            return jsonify({"response":data,"success":True})
+
+
+
+        else:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ? and author=?',(title,c))
+            data = cur.fetchall()
+
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to edit this song')
+
+        
+
+
+            #add the song
+            cur.execute("update songs set author=?,lyrics=? where title=?",(author,lyrics,title))
+            conn.commit()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
+            return jsonify({"response":data,"success":True})
+
+
+
+
+
+
+
 
 
     except Exception as e:
-        return str(e.args)
+        return jsonify({"response":str(e),"success":False})
+
 
 
 
@@ -227,40 +296,109 @@ DELETE ROUTE
 '''
 
 @app.route('/delete_song',methods=['DELETE'])
+@cross_origin()
 @token_required
-def delete_song():
- 
-    #data is a dict of key_value pairs
-    data = request.json
-    
+def delete_song(name):
 
 
     try:
-
+         #data is a dict of key_value pairs
+        content = request.get_json()
+        a,b,c,d,e = name
         #check that it has all of the requirements. a title,author, and lyrics
-        title = data['title']
+        title = content['title']
 
+        if e==True:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
+            data = cur.fetchall()
 
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to delete this song')
+        else:
+            #check that name of song does not exist already
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM songs WHERE title = ? and author=?',(title,c))
+            data = cur.fetchall()
 
-        #check that name of song exists
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
-        data = cur.fetchall()
-
-        if data==[]:
-            raise Exception('There is no song like this')
+            if data==[]:
+                raise Exception('This song does not exist or you do not have access to delete this song')
 
         
 
+
         #add the song
-        cur.execute("DELETE FROM songs WHERE title=?",(title,))
+        cur.execute("delete from songs where title=?",(title,))
         conn.commit()
-        cur.execute('SELECT * FROM songs WHERE title = ?',[title])
+        cur.execute('SELECT * FROM songs WHERE title = ?',(title,))
         data = cur.fetchall()
-        return data
+        return jsonify({"response":data,"success":True})
+
+    except Exception as e:
+        return jsonify({"response":str(e),"success":False})
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+EDIT
+'''
+
+@app.route('/edit_users',methods=['POST'])
+@cross_origin()
+@token_required
+def edit_users(name):
+
+
+    try:
+         #data is a dict of key_value pairs
+        content = request.get_json()
+        a,b,c,d,e = name
+        #check that it has all of the requirements. a title,author, and lyrics
+        username = content['username']
+        password = content['password']
+        superUser = content['superUser']
+
+        if e==True:
+            #check that the user
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM users WHERE username= ?',(username,))
+            data = cur.fetchall()
+
+
+
+            if data==[]:
+                raise Exception('This user does not exist')
+            
+
+        else:
+                raise Exception('This song does not exist or you do not have access to delete this song')
+
+        
+        #hash what the user gives you
+        passbytes = password.encode('utf-8')
+        hashedword = bcrypt.hashpw(passbytes,bcrypt.gensalt())
+
+        #add the song
+        cur.execute("update users set username=?,password=?,superUser=? where username=?",(username,hashedword,superUser,username))
+        conn.commit()
+        cur.execute('SELECT * FROM users WHERE username = ?',(username,))
+        data = cur.fetchall()
+        return jsonify({"response":str(e),"success":True})
 
 
     except Exception as e:
-        return str(e.args)
-
+        return jsonify({"response":str(e),"success":False})
