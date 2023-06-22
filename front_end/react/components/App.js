@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { handleEditSong,handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong,handleDeleteSong} from './api_calls';
+import { handleEditSong,handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong,handleDeleteSong,handleEditUser} from './api_calls';
 import { SongList } from './SongList';
 export const App = () => {
   // State holds the current file that is to be uploaded to the server
   const [page,setPage] = useState('homepage')
   const [username,setUsername] = useState()
   const [password,setPassword] = useState()
+  const [superUser,setSuperUser] = useState()
   const [someToken,setSomeToken] = useState()
   const [ifToken,setIfToken] = useState(false)
   const [allSongs,setAllSongs]= useState()
@@ -20,6 +21,11 @@ export const App = () => {
   const [author,setAuthor] =useState()
   const [lyrics,setLyrics] =useState()
 
+
+
+
+
+  /* States Editing User */
 
 
   if (page==='homepage' && !ifToken){
@@ -103,6 +109,7 @@ export const App = () => {
           <button onClick={(e)=>setPage('add_song')}>Add A song</button>
           <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
           <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+          <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
         </div>
 
       )
@@ -130,6 +137,7 @@ export const App = () => {
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
         <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
         <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
       </div>
       )
   }
@@ -164,6 +172,7 @@ export const App = () => {
       <button onClick={(e)=>setPage('add_song')}>Add A song</button>
       <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
       <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+      <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
     </div>
     )
   
@@ -212,6 +221,7 @@ export const App = () => {
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
         <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
         <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
       </div>
       )
 
@@ -227,6 +237,7 @@ export const App = () => {
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
         <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
         <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
       </div>
       )
 
@@ -259,6 +270,7 @@ export const App = () => {
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
         <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
         <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
       </div>
       )
 
@@ -274,6 +286,7 @@ export const App = () => {
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
         <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
         <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
       </div>
       )
   }
@@ -305,6 +318,7 @@ export const App = () => {
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
         <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
         <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
       </div>
       )
 
@@ -320,9 +334,56 @@ export const App = () => {
         <button onClick={(e)=>setPage('add_song')}>Add A song</button>
         <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
         <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
       </div>
       )
 
   }
-  
+  else if(page==='edit_user_success'){
+
+    return(
+      <div className="top_level_container">
+        <h3>Successfully Edited User</h3>
+        <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+        <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
+        <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
+      </div>
+      )
+
+  }
+  else if(page==='edit_user_failed'){
+
+    return(
+      <div className="top_level_container">
+        <h3>Failed to edit user</h3>
+        <button onClick={(e)=>handleAllSongs(e,setPage,setAllSongs,someToken)}>Get Songs</button>
+        <button onClick={(e)=>setPage('some_song')}>Get A Song </button>
+        <button onClick={(e)=>setPage('add_song')}>Add A song</button>
+        <button onClick={(e)=>setPage('edit_song')}>Edit A Song</button>
+        <button onClick={(e)=>setPage('delete_song')}>Delete A Song</button>
+        <button onClick={(e)=>setPage('edit_user')}>Edit a User</button>
+      </div>
+      )
+
+  }
+
+  else if(page==='edit_user'){
+    return (
+      <div>
+      
+      <form onSubmit={(e) => handleEditUser(e,setPage,username,password,superUser,someToken)}>
+        <input type="text" onChange={(e) => setUsername(e.target.value)} placeholder='username'/>
+        <input type="text" onChange={(e) => setPassword(e.target.value)} placeholder='password'/>
+        <input type="text" onChange={(e) => setSuperUser(e.target.value)} placeholder='superuser'/>
+        <input type='submit' value='Edit User'></input>
+      </form>
+
+
+      </div>
+
+  )
+  }
 }

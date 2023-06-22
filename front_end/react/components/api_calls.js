@@ -217,4 +217,38 @@ const handleDeleteSong = (e,setPG,title,token) =>{
 }
 
 
-module.exports = {handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong,handleEditSong,handleDeleteSong}
+const handleEditUser = (e,setPG,username,password,superUser,token) =>{
+    e.preventDefault()
+    console.log(JSON.stringify({username:username,password:password,superUser:superUser}))
+    fetch('http://127.0.0.1:5000/edit_users',{
+        method:'POST',
+        headers: {
+            'Content-type':'application/json', 
+            'Accept':'application/json',
+            'x-access-token':token
+        },
+        body:JSON.stringify({username:username,password:password,superUser:superUser})
+    })
+
+    .then((res)=>res.json())
+    .then((data)=>
+    {
+
+        console.log(data['success'])
+        if( !(data['success'])){
+            setPG('edit_user_failed')
+        }else{
+            setPG('edit_user_success')
+        }
+
+
+
+            console.log(data)
+    
+    })
+    .catch((err)=>console.error(err))
+    
+}
+
+
+module.exports = {handleRegisterSubmit,handleLoginSubmit,handleAllSongs,handleOneSong,handleAddSong,handleEditSong,handleDeleteSong,handleEditUser}

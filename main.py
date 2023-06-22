@@ -339,3 +339,66 @@ def delete_song(name):
 
     except Exception as e:
         return jsonify({"response":str(e),"success":False})
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+EDIT
+'''
+
+@app.route('/edit_users',methods=['POST'])
+@cross_origin()
+@token_required
+def edit_users(name):
+
+
+    try:
+         #data is a dict of key_value pairs
+        content = request.get_json()
+        a,b,c,d,e = name
+        #check that it has all of the requirements. a title,author, and lyrics
+        username = content['username']
+        password = content['password']
+        superUser = content['superUser']
+
+        if e==True:
+            #check that the user
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM users WHERE username= ?',(username,))
+            data = cur.fetchall()
+
+
+
+            if data==[]:
+                raise Exception('This user does not exist')
+            
+
+        else:
+                raise Exception('This song does not exist or you do not have access to delete this song')
+
+        
+        #hash what the user gives you
+        passbytes = password.encode('utf-8')
+        hashedword = bcrypt.hashpw(passbytes,bcrypt.gensalt())
+
+        #add the song
+        cur.execute("update users set username=?,password=?,superUser=? where username=?",(username,hashedword,superUser,username))
+        conn.commit()
+        cur.execute('SELECT * FROM users WHERE username = ?',(username,))
+        data = cur.fetchall()
+        return jsonify({"response":str(e),"success":True})
+
+
+    except Exception as e:
+        return jsonify({"response":str(e),"success":False})
